@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+apps/web/dist/
+apps/api/dist/
+
+# env / secrets
+.env
+*.local
+
+# logs
+logs/
+*.log
+
+# runtime data (docker volumes are named, but ignore any local strays)
+pgdata/
+uploads/
+backups/
+
+# editor / os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# prisma
+apps/api/prisma/*.db
+
+# test
+coverage/
+playwright-report/
+test-results/

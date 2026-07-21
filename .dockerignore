@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/build
+**/.tmp
+.git
+.husky
+logs
+pgdata
+uploads
+backups
+**/*.log
+.env
