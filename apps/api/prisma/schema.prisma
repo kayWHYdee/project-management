@@ -1,0 +1,199 @@
+// Water treatment project management — application schema.
+// All application tables live in the `pm` schema so a future, separate
+// inventory application can own an `inventory` schema in the same database
+// without the two coupling. The apps must never share tables.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["pm"]
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  contact   String?
+  phone     String?
+  email     String?
+  notes     String?
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([name])
+  @@schema("pm")
+}
+
+enum ProjectStatus {
+  ENQUIRY
+  QUOTED
+  IN_PROGRESS
+  HANDED_OVER
+  UNDER_MAINTENANCE
+  CLOSED
+
+  @@schema("pm")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id])
+  name        String
+  status      ProjectStatus @default(ENQUIRY)
+  address     String?
+  description String?
+  budgetValue Decimal?      @db.Decimal(14, 2)
+  startDate   DateTime?     @db.Date
+  notes       String?
+  systems     System[]
+  expenses    Expense[]
+  version     Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  @@index([clientId])
+  @@index([status])
+  @@schema("pm")
+}
+
+enum SystemType {
+  POOL
+  FOUNTAIN
+  RO
+  STP
+  WTP
+  SPARES
+  CONSUMABLES
+
+  @@schema("pm")
+}
+
+model System {
+  id        String     @id @default(cuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id])
+  type      SystemType
+  label     String
+  notes     String?
+  entries   Entry[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@schema("pm")
+}
+
+enum ItemCategory {
+  MECHANICAL
+  ELECTRICAL
+  CHEMICAL
+  MEDIA
+  FITTINGS
+  OTHER
+
+  @@schema("pm")
+}
+
+model Item {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  category  ItemCategory @default(OTHER)
+  isActive  Boolean      @default(true)
+  sortOrder Int          @default(0)
+  entries   Entry[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@schema("pm")
+}
+
+model Entry {
+  id          String    @id @default(cuid())
+  systemId    String
+  system      System    @relation(fields: [systemId], references: [id])
+  itemId      String?
+  item        Item?     @relation(fields: [itemId], references: [id])
+  customName  String?
+  description String?
+  quantity    Decimal   @db.Decimal(12, 3)
+  unit        String?
+  sentOn      DateTime  @db.Date
+  receivedBy  String?
+  rate        Decimal?  @db.Decimal(14, 2)
+  amount      Decimal?  @db.Decimal(14, 2)
+  notes       String?
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  version     Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Deliberately NO unique on (systemId, itemId): multiple entries of the same
+  // item under the same system are normal and expected.
+  @@index([itemId])
+  @@index([systemId])
+  @@index([sentOn])
+  @@schema("pm")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  category    String
+  amount      Decimal  @db.Decimal(14, 2)
+  spentOn     DateTime @db.Date
+  note        String?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+
+  @@index([projectId])
+  @@schema("pm")
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+
+  @@schema("pm")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(EDITOR)
+  isActive     Boolean   @default(true)
+  entries      Entry[]
+  expenses     Expense[]
+  createdAt    DateTime  @default(now())
+
+  @@schema("pm")
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  userId   String?
+  entity   String
+  entityId String
+  action   String
+  before   Json?
+  after    Json?
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@schema("pm")
+}
