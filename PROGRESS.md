@@ -1,0 +1,142 @@
+# Progress
+
+_Where we are, phase by phase. Pairs with [VISION.md](VISION.md) (what/why) and
+[ARCHITECTURE.md](ARCHITECTURE.md) (how). We stop for review at the end of every phase._
+
+Legend: ✅ done · 🔜 next · ⬜ not started
+
+---
+
+## Phase status
+
+| #   | Phase                                                               | Status |
+| --- | ------------------------------------------------------------------- | ------ |
+| 1   | Monorepo scaffold, Docker Compose, Prisma schema + migration + seed | ✅     |
+| 2   | Auth, users, roles, audit log, exception filter, logging            | 🔜     |
+| 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | ⬜     |
+| 4   | Items module + autocomplete matcher (+ full test suite)             | ⬜     |
+| 5   | Entries + expenses, add-entry form, project detail with rollups     | ⬜     |
+| 6   | Analysis view, filters, CSV export                                  | ⬜     |
+| 7   | Settings: items (incl. merge), users                                | ⬜     |
+| 8   | Backups (nightly pg_dump + tested restore), full README             | ⬜     |
+
+---
+
+## Phase 1 — done (2026-07-21)
+
+**Delivered**
+
+- pnpm monorepo (`apps/api`, `apps/web`, `packages/shared`); strict TS, `any` banned;
+  ESLint (flat) + Prettier; Husky pre-commit (lint-staged) + commit-msg (commitlint);
+  `.env.example` committed, `.env` gitignored.
+- `packages/shared` dual-built (CJS+ESM): money (decimal-string + BigInt math), dates
+  (`YYYY-MM-DD`, tz-safe), enums, health contract. **12 unit tests green.**
+- Prisma schema in `pm`; `0001_init` migration committed (6 indexes + analysis index,
+  Entry item-XOR-customName CHECK constraint, `Expense.createdById` optional). Idempotent
+  seed (30 items with categories + first OWNER from env).
+- NestJS bootstrap: `/api/health` (round-trips DB), pino JSON logging to a volume,
+  Zod-validated env config, global Prisma module.
+- React 19 + Vite + Tailwind + shadcn base + TanStack Query; PWA manifest + SW; live
+  health card.
+- Docker Compose (postgres 16 + api + caddy), Dockerfiles, Caddyfile (HTTP, Option-A ready),
+  README.
+
+**Verification**
+
+| Gate                                | Result                                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------------------- |
+| `pnpm -r build`                     | ✅                                                                                      |
+| `pnpm -r typecheck`                 | ✅                                                                                      |
+| `pnpm lint`                         | ✅ 0 errors                                                                             |
+| `pnpm format:check`                 | ✅                                                                                      |
+| shared tests                        | ✅ 12/12                                                                                |
+| `prisma validate` + seed type-check | ✅                                                                                      |
+| `docker compose up`                 | ⚠️ **not run** — Docker isn't installed on the dev Mac; must be verified on the mini PC |
+
+**Known follow-ups / notes**
+
+- `docker compose up` still needs a real run on the target machine (or Docker Desktop here).
+- `.env`: `POSTGRES_PASSWORD` and the password embedded in `DATABASE_URL` must be kept in
+  sync (documented in README/.env.example).
+- Seed item `____Head` is a placeholder to be renamed in Settings (Phase 7).
+
+---
+
+## Phase 2 — plan (next)
+
+**Goal:** a user can log in, sessions are enforced by role across the API, and every mutating
+request is audited. No client/project features yet — this is the security spine.
+
+### Backend (`apps/api`)
+
+1. **Session infrastructure** — cookie-based sessions (`httpOnly`, `sameSite=lax`,
+   `Secure` = `COOKIE_SECURE`). Store: Postgres-backed session table in `pm` (survives
+   restarts, no extra service) or signed cookie — decide at start of phase; leaning
+   Postgres-backed for revocability. Sign with `SESSION_SECRET`.
+2. **Auth module** — `POST /api/auth/login` (email+password, argon2id verify, email lowercased
+   to match seed), `POST /api/auth/logout`, `GET /api/auth/me`. Rate-limit login attempts.
+3. **Password hashing service** — argon2id wrapper (params centralised).
+4. **Guards & decorators** — `AuthGuard` (valid session) + `RolesGuard` with a `@Roles(...)`
+   decorator and a `@CurrentUser()` param decorator. `VIEWER` read-only, `EDITOR` full data,
+   `OWNER` full incl. users. Enforced server-side, not just UI.
+5. **Users module** (OWNER-only) — list, create (sets temp password), deactivate, change role.
+   No hard delete (`isActive`).
+6. **Audit interceptor/service** — every mutating endpoint writes an `AuditLog` row with
+   `before`/`after` JSON + `userId` from the session. Implement once as a reusable
+   interceptor so feature modules get it for free.
+7. **Exception filter** — global filter mapping typed domain errors (e.g. `NotFoundError`,
+   `ConflictError` for stale `version`, `ForbiddenError`) to proper HTTP codes and **safe**
+   messages. Raw Prisma errors / stack traces never leak. Zod validation errors → 400 with
+   field details.
+8. **Contracts in `packages/shared`** — `loginRequest`, `sessionUser`, `user` CRUD schemas,
+   role enum reuse. Everything validated both sides.
+
+### Frontend (`apps/web`)
+
+9. **Auth state** — `useSession` (TanStack Query on `/auth/me`), login page (RHF + Zod),
+   logout, and a route guard that redirects unauthenticated users to login.
+10. **App shell** — minimal authenticated layout (nav + user menu) so later phases have a
+    home. Role-aware nav (hide Users from non-OWNER).
+11. **Settings → Users** screen (OWNER-only) wired to the users module.
+
+### Tests
+
+12. Integration tests (API against a test DB): login success/failure, session expiry, role
+    gating (VIEWER blocked from writes, non-OWNER blocked from users), audit-row written on a
+    mutation. Unit test the exception filter mapping.
+
+### Phase 2 acceptance
+
+- Log in as the seeded OWNER; `/auth/me` returns the session user.
+- A VIEWER cannot POST; a non-OWNER cannot reach `/users`; both enforced by the API.
+- Creating/deactivating a user writes an `AuditLog` row.
+- A forced error returns a clean JSON error, no stack trace.
+
+---
+
+## How to run what exists today (Phase 1)
+
+**Option A — Docker (matches production; needs Docker installed):**
+
+```bash
+cp .env.example .env   # set POSTGRES_PASSWORD, SESSION_SECRET, BOOTSTRAP_OWNER_*
+docker compose up --build
+```
+
+- App → **http://localhost/**
+- API health → **http://localhost/api/health**
+- From another device on the wifi → `http://<host-ip>/` or `http://<hostname>.local/`
+
+**Option B — dev servers (no Docker; needs a reachable Postgres + `.env` with `DATABASE_URL`):**
+
+```bash
+pnpm install
+pnpm --filter @water-pm/shared build
+pnpm --filter @water-pm/api prisma:migrate:dev
+pnpm --filter @water-pm/api prisma:seed
+pnpm dev:api    # http://localhost:3000  (health: http://localhost:3000/api/health)
+pnpm dev:web    # http://localhost:5173  ← open THIS one in the browser
+```
+
+In dev, the Vite dev server on **http://localhost:5173** proxies `/api` to the API on
+:3000, so open **http://localhost:5173**.

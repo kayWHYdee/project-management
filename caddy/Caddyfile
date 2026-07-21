@@ -1,0 +1,42 @@
+# --- Option B: plain HTTP on the office LAN (current) ------------------------
+# Serves the built PWA and reverse-proxies /api to the NestJS container.
+# No TLS: PWA install is unavailable on Android and session cookies are not
+# marked Secure. See README "Switching to HTTPS (Option A)" to enable TLS.
+:80 {
+	encode gzip
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+
+# --- Option A: HTTPS with Caddy's internal CA (commented out) ----------------
+# Replace the `:80 { … }` block above with the block below to serve HTTPS on the
+# LAN. Then set COOKIE_SECURE=true in .env and install Caddy's root cert on each
+# device (see README). Use your machine's mDNS name, e.g. waterpm.local.
+#
+# waterpm.local {
+# 	tls internal
+# 	encode gzip
+# 	@api path /api/*
+# 	handle @api {
+# 		reverse_proxy api:3000
+# 	}
+# 	handle {
+# 		root * /srv
+# 		try_files {path} /index.html
+# 		file_server
+# 	}
+# }
