@@ -8,6 +8,7 @@ import {
   type CreateSystemRequest,
   type Project,
   type ProjectDetail,
+  type ProjectSummary,
   type System,
   type UpdateProjectRequest,
 } from '@water-pm/shared';
@@ -17,12 +18,14 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import type { AuthenticatedUser } from '../common/auth/authenticated-user';
 import { SystemsService } from '../systems/systems.service';
 import { ProjectsService } from './projects.service';
+import { ProjectSummaryService } from './project-summary.service';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(
     private readonly projects: ProjectsService,
     private readonly systems: SystemsService,
+    private readonly summary: ProjectSummaryService,
   ) {}
 
   @Get()
@@ -42,6 +45,11 @@ export class ProjectsController {
   @Get(':id')
   get(@Param('id') id: string): Promise<ProjectDetail> {
     return this.projects.getDetail(id);
+  }
+
+  @Get(':id/summary')
+  getSummary(@Param('id') id: string): Promise<ProjectSummary> {
+    return this.summary.getSummary(id);
   }
 
   @Roles('OWNER', 'EDITOR')
