@@ -39,12 +39,13 @@ export class AuthController {
   @Post('logout')
   @HttpCode(204)
   async logout(
+    @CurrentUser() user: AuthenticatedUser,
     @Req() request: RequestWithUser,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
     const token = (request.signedCookies as Record<string, unknown> | undefined)?.[SESSION_COOKIE];
     if (typeof token === 'string') {
-      await this.auth.logout(token);
+      await this.auth.logout(user.id, token);
     }
     clearSessionCookie(response, { secure: this.config.cookieSecure });
   }

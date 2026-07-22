@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import type { ChangePasswordRequest, LoginRequest, SessionUser } from '@water-pm/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../common/audit/audit.service';
 import { UnauthorizedError, ValidationError } from '../common/errors/domain-error';
 import { PasswordService } from './password.service';
 import { SessionService, type IssuedSession } from './session.service';
@@ -12,6 +13,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwords: PasswordService,
     private readonly sessions: SessionService,
+    private readonly audit: AuditService,
   ) {}
 
   async login(dto: LoginRequest): Promise<{ user: SessionUser; session: IssuedSession }> {
@@ -29,11 +31,18 @@ export class AuthService {
     }
 
     const session = await this.sessions.issue(user.id);
+    await this.audit.record({
+      userId: user.id,
+      entity: 'Auth',
+      entityId: user.id,
+      action: 'LOGIN',
+    });
     return { user: this.toSessionUser(user), session };
   }
 
-  async logout(token: string): Promise<void> {
+  async logout(userId: string, token: string): Promise<void> {
     await this.sessions.revoke(token);
+    await this.audit.record({ userId, entity: 'Auth', entityId: userId, action: 'LOGOUT' });
   }
 
   async changePassword(userId: string, dto: ChangePasswordRequest): Promise<void> {
@@ -52,6 +61,12 @@ export class AuthService {
     await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
     // Force re-login everywhere after a password change.
     await this.sessions.revokeAllForUser(userId);
+    await this.audit.record({
+      userId,
+      entity: 'Auth',
+      entityId: userId,
+      action: 'PASSWORD_CHANGE',
+    });
   }
 
   private toSessionUser(user: User): SessionUser {
