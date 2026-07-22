@@ -18,6 +18,13 @@ export function useProject(id: string) {
   return useQuery({ queryKey: ['project', id], queryFn: () => projectsApi.get(id) });
 }
 
+export function useProjectSummary(id: string) {
+  return useQuery({
+    queryKey: ['project-summary', id],
+    queryFn: () => projectsApi.summary(id),
+  });
+}
+
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({

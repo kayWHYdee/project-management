@@ -17,8 +17,12 @@ import {
   useDeleteProject,
   useDeleteSystem,
   useProject,
+  useProjectSummary,
   useUpdateProject,
 } from '@/features/projects/hooks';
+import { EntriesSection } from '@/features/entries/EntriesSection';
+import { ItemRollupTable } from '@/features/entries/ItemRollupTable';
+import { ExpensesSection } from '@/features/expenses/ExpensesSection';
 import { useCanWrite } from '@/features/auth/hooks';
 
 export function ProjectDetailPage() {
@@ -26,6 +30,7 @@ export function ProjectDetailPage() {
   const navigate = useNavigate();
   const canWrite = useCanWrite();
   const project = useProject(id);
+  const summary = useProjectSummary(id);
   const updateProject = useUpdateProject(id);
   const deleteProject = useDeleteProject();
   const deleteSystem = useDeleteSystem(id);
@@ -37,6 +42,7 @@ export function ProjectDetailPage() {
     return <p className="text-sm text-destructive">Project not found.</p>;
   }
   const data = project.data;
+  const financials = summary.data?.financials;
 
   const onStatusChange = (status: ProjectStatus) => {
     updateProject.mutate({ version: data.version, status });
@@ -104,9 +110,19 @@ export function ProjectDetailPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryTile label="Budget" value={data.budgetValue ? formatInr(data.budgetValue) : '—'} />
-        <SummaryTile label="Start date" value={data.startDate ?? '—'} />
-        <SummaryTile label="Systems" value={String(data.systems.length)} />
+        <SummaryTile
+          label="Budget"
+          value={financials?.budget ? formatInr(financials.budget) : '—'}
+        />
+        <SummaryTile
+          label="Spent (materials + expenses)"
+          value={financials ? formatInr(financials.totalSpent) : '—'}
+        />
+        <SummaryTile
+          label="Remaining"
+          value={financials?.remaining ? formatInr(financials.remaining) : '—'}
+          highlight={financials?.remaining ? financials.remaining.startsWith('-') : false}
+        />
       </div>
 
       {data.description && (
@@ -157,16 +173,31 @@ export function ProjectDetailPage() {
         </div>
       </section>
 
-      <p className="text-sm text-muted-foreground">Entries and expenses arrive in Phase 5.</p>
+      <EntriesSection projectId={id} systems={data.systems} canWrite={canWrite} />
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium">Item summary</h2>
+        <ItemRollupTable projectId={id} rollups={summary.data?.itemRollups ?? []} />
+      </section>
+
+      <ExpensesSection projectId={id} canWrite={canWrite} />
     </div>
   );
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div className="rounded-lg border p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+      <p className={`mt-1 text-lg font-semibold ${highlight ? 'text-destructive' : ''}`}>{value}</p>
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import {
   projectDetailSchema,
   projectListSchema,
+  projectSummarySchema,
   systemSchema,
   type CreateProjectRequest,
   type CreateSystemRequest,
   type Project,
   type ProjectDetail,
+  type ProjectSummary,
   type System,
   type UpdateProjectRequest,
 } from '@water-pm/shared';
@@ -30,6 +32,8 @@ export const projectsApi = {
   list: (filter: ProjectListFilter = {}): Promise<Project[]> =>
     api.get(`/projects${toQuery(filter)}`, projectListSchema),
   get: (id: string): Promise<ProjectDetail> => api.get(`/projects/${id}`, projectDetailSchema),
+  summary: (id: string): Promise<ProjectSummary> =>
+    api.get(`/projects/${id}/summary`, projectSummarySchema),
   create: (body: CreateProjectRequest): Promise<ProjectDetail> =>
     api.post('/projects', body, projectDetailSchema),
   update: (id: string, body: UpdateProjectRequest): Promise<ProjectDetail> =>
