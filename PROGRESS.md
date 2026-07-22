@@ -15,8 +15,8 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 | 2   | Auth, users, roles, audit log, exception filter, logging            | ✅     |
 | 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | ✅     |
 | 4   | Items module + autocomplete matcher (+ full test suite)             | ✅     |
-| 5   | Entries + expenses, add-entry form, project detail with rollups     | 🔜     |
-| 6   | Analysis view, filters, CSV export                                  | ⬜     |
+| 5   | Entries + expenses, add-entry form, project detail with rollups     | ✅     |
+| 6   | Analysis view, filters, CSV export                                  | 🔜     |
 | 7   | Settings: items (incl. merge), users                                | ⬜     |
 | 8   | Backups (nightly pg_dump + tested restore), full README             | ⬜     |
 
@@ -174,6 +174,43 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 
 - Item rename / category change / activate-deactivate / **merge** / usage counts are **Phase 7**
   (Settings → Items). Phase 4 is list + inline-add + the matcher only.
+
+---
+
+## Phase 5 — done (2026-07-22)
+
+**Delivered** — the core "what did we send, what did we spend":
+
+- **Entries API**: create / update / delete + list-per-project. Amount = quantity × rate when a
+  rate is present (**server-computed, authoritative**), else manually enterable. `customName`
+  only accepted for SPARES/CONSUMABLES (service rule + DB check constraint + Zod refine).
+  Optimistic locking (`version` → 409). Soft-delete. `createdById` from the session. Audited.
+- **Expenses API**: create / update / delete + list-per-project (category, amount, spentOn, note).
+- **Project summary endpoint** (`GET /projects/:id/summary`): budget vs spent (materials +
+  expenses) vs remaining, plus **per-item rollups** (total qty, total value, entry count) — all
+  money math via the shared decimal helpers.
+- **Web add-entry form**: fast, keyboard-first (system → item picker (autofocus) → qty → unit →
+  date=today → rate → …), live amount preview, **"Save & add another"** (keeps system + date),
+  and a custom-name toggle for Spares/Consumables.
+- **Web project detail** rebuilt: budget/spent/remaining tiles, entries **grouped by system**,
+  an **item summary table that expands** to the entries behind each total, and an expenses list
+  with an add form. Role-aware (VIEWER read-only).
+
+**Verification**
+
+| Gate                          | Result                                                             |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `pnpm -r build` / `typecheck` | ✅                                                                 |
+| `pnpm lint` / `format:check`  | ✅                                                                 |
+| shared unit tests             | ✅ 49/49 (adds rollup math, financials, entry refine, sumQuantity) |
+| api unit tests                | ✅ 24/24 (adds amount compute, custom-name rule, entry lock)       |
+| integration / e2e             | ⚠️ still need a live Postgres — pending on the mini PC / CI        |
+
+**Notes**
+
+- Entry _edit_ has an API + optimistic lock but no dedicated UI yet (delete + re-add is the
+  primary flow, matching the "entries are records, not assets" grain). Easy to add an edit dialog.
+- No new migration (Entry/Expense tables existed from `0001_init`).
 
 ---
 
