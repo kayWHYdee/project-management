@@ -179,8 +179,25 @@ model User {
   isActive     Boolean   @default(true)
   entries      Entry[]
   expenses     Expense[]
+  sessions     Session[]
   createdAt    DateTime  @default(now())
 
+  @@schema("pm")
+}
+
+// Login sessions. Infrastructure, not domain data: rows are hard-deleted on
+// logout / expiry (the soft-delete rule applies to domain entities, not these).
+// The cookie carries a random token; only its SHA-256 hash is stored here.
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
   @@schema("pm")
 }
 
