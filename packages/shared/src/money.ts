@@ -81,6 +81,17 @@ export function sumMoney(values: readonly string[]): MoneyString {
   return formatScaled(total, 2) as MoneyString;
 }
 
+/** Sum a list of quantity strings (3 decimals) with no floating-point error. */
+export function sumQuantity(values: readonly string[]): QuantityString {
+  const total = values.reduce((acc, v) => acc + parseToScaled(v, 3), 0n);
+  return formatScaled(total, 3) as QuantityString;
+}
+
+/** Subtract b from a (money, 2 decimals). Used for budget remaining. */
+export function subtractMoney(a: string, b: string): MoneyString {
+  return formatScaled(parseToScaled(a, 2) - parseToScaled(b, 2), 2) as MoneyString;
+}
+
 /**
  * Amount = quantity * rate, rounded half-up to 2 decimal places.
  * Quantity carries 3 decimals and rate 2, so the product is exact at 5 decimals

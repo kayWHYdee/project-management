@@ -1,5 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { computeAmount, formatInr, moneySchema, quantitySchema, sumMoney } from './money';
+import {
+  computeAmount,
+  formatInr,
+  moneySchema,
+  quantitySchema,
+  subtractMoney,
+  sumMoney,
+  sumQuantity,
+} from './money';
+
+describe('sumQuantity / subtractMoney', () => {
+  it('sums quantities at 3 decimals', () => {
+    expect(sumQuantity(['1.500', '2.250', '0.250'])).toBe('4.000');
+    expect(sumQuantity([])).toBe('0.000');
+  });
+
+  it('subtracts money and can go negative', () => {
+    expect(subtractMoney('100.00', '30.50')).toBe('69.50');
+    expect(subtractMoney('100.00', '150.00')).toBe('-50.00');
+  });
+});
 
 describe('computeAmount', () => {
   it('multiplies quantity by rate with 2dp half-up rounding', () => {

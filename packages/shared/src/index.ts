@@ -10,3 +10,7 @@ export * from './system';
 export * from './project';
 export * from './item';
 export * from './item-matcher';
+export * from './entry';
+export * from './expense';
+export * from './project-summary';
+export * from './project-rollup';
