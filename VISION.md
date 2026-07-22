@@ -68,6 +68,11 @@ Stock levels, reorder points, warehouse locations, serial-number tracking, asset
 
 ## 6. The screens (target v1)
 
+_Two "dashboards" / axes of the same data: the **project axis** (Home dashboard → Clients →
+Projects → Project detail → Add entry) and the **item axis** (Items dashboard → per-item
+analysis of where each item is placed). Adding items happens inline in the entry combobox and
+in Settings → Items._
+
 1. **Login**
 2. **Dashboard** — project count by status, total spend this month, recently updated projects
 3. **Clients** — searchable; client detail shows their projects

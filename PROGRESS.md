@@ -13,9 +13,9 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 | --- | ------------------------------------------------------------------- | ------ |
 | 1   | Monorepo scaffold, Docker Compose, Prisma schema + migration + seed | ✅     |
 | 2   | Auth, users, roles, audit log, exception filter, logging            | ✅     |
-| 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | 🔜     |
-| 4   | Items module + autocomplete matcher (+ full test suite)             | ⬜     |
-| 5   | Entries + expenses, add-entry form, project detail with rollups     | ⬜     |
+| 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | ✅     |
+| 4   | Items module + autocomplete matcher (+ full test suite)             | ✅     |
+| 5   | Entries + expenses, add-entry form, project detail with rollups     | 🔜     |
 | 6   | Analysis view, filters, CSV export                                  | ⬜     |
 | 7   | Settings: items (incl. merge), users                                | ⬜     |
 | 8   | Backups (nightly pg_dump + tested restore), full README             | ⬜     |
@@ -104,6 +104,76 @@ Legend: ✅ done · 🔜 next · ⬜ not started
   are written into the plan but need a database to execute; wire them on the target or in CI.
 - Expired-session pruning is opportunistic (per request). A periodic prune can come with the
   Phase 8 cron work if the `Session` table ever grows.
+
+---
+
+## Phase 3 — done (2026-07-22)
+
+**Delivered**
+
+- **Clients** CRUD: list (search), detail (with project count + their projects), create, update,
+  soft-delete (blocked while active projects remain).
+- **Projects** CRUD: list (filter by status/client + search), detail (carries its systems),
+  create (in a transaction that auto-adds the SPARES + CONSUMABLES systems), update guarded by
+  **optimistic locking** (`version` → **409** on a stale edit), soft-delete (cascades to systems).
+- **Systems** CRUD: add a system to a project (label defaults to a humanised type name), update,
+  soft-delete — with SPARES/CONSUMABLES **protected** (can't be manually created or removed).
+- Writes gated to OWNER/EDITOR; reads for any authenticated user; every mutation audited.
+- **Web**: Home dashboard (status counts + recent projects), Clients (list/search/detail/create),
+  Projects (list/filters/create), Project detail (client link, **inline status edit**,
+  budget/date tiles, systems cards, add/remove system). Role-aware write actions (VIEWER read-only).
+- Also folded in the two review fixes: **trust-proxy** (real client IP for rate limiting) and
+  **audit on auth events** (login / logout / password-change).
+
+**Verification**
+
+| Gate                          | Result                                                      |
+| ----------------------------- | ----------------------------------------------------------- |
+| `pnpm -r build` / `typecheck` | ✅                                                          |
+| `pnpm lint` / `format:check`  | ✅                                                          |
+| shared unit tests             | ✅ 29/29 (adds client + project schema tests)               |
+| api unit tests                | ✅ 18/18 (adds optimistic-lock, auto-system, client-delete) |
+| integration / e2e             | ⚠️ still need a live Postgres — pending on the mini PC / CI |
+
+**Deferred (small, noted)**
+
+- **Client edit** UI not built yet (create + view + delete are). The API `PATCH /clients/:id`
+  exists; just needs a dialog. Easy add.
+- No new migration this phase (Clients/Projects/Systems tables already existed from `0001_init`).
+
+---
+
+## Phase 4 — done (2026-07-22)
+
+**Delivered**
+
+- **The matcher** (`packages/shared/src/item-matcher.ts`): pure, exported `matchItems(query, items)`.
+  Tokenise + lowercase; every query token must prefix some name token (order-independent); rank
+  exact → startsWith → all-tokens → substring; within a tier by sortOrder then name; inactive
+  excluded; empty query → all active in catalog order. Hand-written (no regex-from-input, no
+  fuzzy lib), with **9 exhaustive tests** covering every brief example.
+- **Items API**: `GET /items` (active; `?includeInactive=true`), `POST /items` (inline add —
+  any role except VIEWER; duplicate name → 409 with a field error; audited). User-added items
+  sort after the curated seed catalog.
+- **Web**: `ItemCombobox` (live narrowing via the matcher, keyboard nav, inline "+ Add"),
+  `AddItemConfirmDialog` (the deliberate mild friction — exact name + "did you mean…?" near
+  matches), and `ItemPicker` (batteries-included: combobox + inline-add flow) ready to drop into
+  the Phase 5 entry form. A minimal **Items** catalog page + nav link demonstrates it.
+
+**Verification**
+
+| Gate                          | Result                                                      |
+| ----------------------------- | ----------------------------------------------------------- |
+| `pnpm -r build` / `typecheck` | ✅                                                          |
+| `pnpm lint` / `format:check`  | ✅                                                          |
+| shared unit tests             | ✅ 38/38 (adds 9 matcher tests)                             |
+| api unit tests                | ✅ 20/20 (adds item create / duplicate-name)                |
+| integration / e2e             | ⚠️ still need a live Postgres — pending on the mini PC / CI |
+
+**Notes**
+
+- Item rename / category change / activate-deactivate / **merge** / usage counts are **Phase 7**
+  (Settings → Items). Phase 4 is list + inline-add + the matcher only.
 
 ---
 

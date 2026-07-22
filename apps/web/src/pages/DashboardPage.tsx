@@ -1,15 +1,36 @@
-import { useQuery } from '@tanstack/react-query';
-import { healthResponseSchema } from '@water-pm/shared';
-import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Project, ProjectStatus } from '@water-pm/shared';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { PROJECT_STATUSES, projectStatusLabel, projectStatusVariant } from '@/lib/project-status';
+import { useProjects } from '@/features/projects/hooks';
 import { useSession } from '@/features/auth/hooks';
 
+function countByStatus(projects: Project[]): Record<ProjectStatus, number> {
+  const counts = Object.fromEntries(PROJECT_STATUSES.map((s) => [s, 0])) as Record<
+    ProjectStatus,
+    number
+  >;
+  for (const project of projects) {
+    counts[project.status] += 1;
+  }
+  return counts;
+}
+
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useSession();
-  const health = useQuery({
-    queryKey: ['health'],
-    queryFn: () => api.get('/health', healthResponseSchema),
-  });
+  const projects = useProjects();
+
+  const counts = projects.data ? countByStatus(projects.data) : undefined;
+  const recent = projects.data?.slice(0, 6) ?? [];
 
   return (
     <div className="space-y-6">
@@ -20,26 +41,60 @@ export function DashboardPage() {
         </p>
       </div>
 
-      <Card className="max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-base">API health</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <span
-            className={
-              health.data?.status === 'ok'
-                ? 'text-sm font-medium text-emerald-600'
-                : 'text-sm text-muted-foreground'
-            }
-          >
-            {health.isPending ? 'Checking…' : health.data?.status === 'ok' ? 'OK' : 'Unreachable'}
-          </span>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {PROJECT_STATUSES.map((status) => (
+          <div key={status} className="rounded-lg border p-4">
+            <p className="text-xs text-muted-foreground">{projectStatusLabel(status)}</p>
+            <p className="mt-1 text-2xl font-semibold">{counts ? counts[status] : '–'}</p>
+          </div>
+        ))}
+      </div>
 
-      <p className="text-sm text-muted-foreground">
-        Clients, projects and entries arrive in the next phases.
-      </p>
+      <div>
+        <h2 className="mb-2 text-sm font-medium">Recently updated projects</h2>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.isPending && (
+                <TableRow>
+                  <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
+                    Loading…
+                  </TableCell>
+                </TableRow>
+              )}
+              {projects.data?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
+                    No projects yet — add a client, then a project.
+                  </TableCell>
+                </TableRow>
+              )}
+              {recent.map((project) => (
+                <TableRow
+                  key={project.id}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                >
+                  <TableCell className="font-medium">{project.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{project.clientName}</TableCell>
+                  <TableCell>
+                    <Badge variant={projectStatusVariant(project.status)}>
+                      {projectStatusLabel(project.status)}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 }

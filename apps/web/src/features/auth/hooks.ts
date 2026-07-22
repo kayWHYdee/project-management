@@ -18,6 +18,12 @@ export function useSession() {
   };
 }
 
+/** OWNER and EDITOR may mutate data; VIEWER is read-only. */
+export function useCanWrite(): boolean {
+  const { user } = useSession();
+  return user?.role === 'OWNER' || user?.role === 'EDITOR';
+}
+
 export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({

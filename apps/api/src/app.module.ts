@@ -10,6 +10,10 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { UsersModule } from './users/users.module';
+import { ClientsModule } from './clients/clients.module';
+import { ProjectsModule } from './projects/projects.module';
+import { SystemsModule } from './systems/systems.module';
+import { ItemsModule } from './items/items.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -21,6 +25,10 @@ import { HealthModule } from './health/health.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     AuthModule,
     UsersModule,
+    ClientsModule,
+    ProjectsModule,
+    SystemsModule,
+    ItemsModule,
     HealthModule,
   ],
   providers: [

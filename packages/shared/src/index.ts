@@ -5,3 +5,8 @@ export * from './health';
 export * from './auth';
 export * from './user';
 export * from './api-error';
+export * from './client';
+export * from './system';
+export * from './project';
+export * from './item';
+export * from './item-matcher';
