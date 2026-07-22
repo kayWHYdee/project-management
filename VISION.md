@@ -103,14 +103,17 @@ they earn their keep (autocomplete matcher, money rollups, validation, one e2e s
 
 ## 9. Open questions / decisions log
 
-| #   | Topic                      | Decision                                                                              | Date       |
-| --- | -------------------------- | ------------------------------------------------------------------------------------- | ---------- |
-| 1   | `customName` on entries    | Allowed for **both** SPARES and CONSUMABLES systems                                   | 2026-07-21 |
-| 2   | `Entry.amount` with a rate | Server computes qty×rate, authoritative; manual only when no rate                     | 2026-07-21 |
-| 3   | Calendar dates             | `YYYY-MM-DD` strings end-to-end (default zone Asia/Kolkata)                           | 2026-07-21 |
-| 4   | `Expense.createdById`      | Optional, taken from the logged-in session, not shown in UI                           | 2026-07-21 |
-| 5   | LAN TLS                    | **Option B: plain HTTP** (no Android PWA install; cookies not Secure). B→A documented | 2026-07-21 |
-| 6   | Seed item `____Head`       | Placeholder; owner will rename it in Settings later                                   | 2026-07-21 |
-| 7   | First OWNER                | Bootstrapped by the seed from `BOOTSTRAP_OWNER_*` if no users exist                   | 2026-07-21 |
+| #   | Topic                      | Decision                                                                                                     | Date       |
+| --- | -------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1   | `customName` on entries    | Allowed for **both** SPARES and CONSUMABLES systems                                                          | 2026-07-21 |
+| 2   | `Entry.amount` with a rate | Server computes qty×rate, authoritative; manual only when no rate                                            | 2026-07-21 |
+| 3   | Calendar dates             | `YYYY-MM-DD` strings end-to-end (default zone Asia/Kolkata)                                                  | 2026-07-21 |
+| 4   | `Expense.createdById`      | Optional, taken from the logged-in session, not shown in UI                                                  | 2026-07-21 |
+| 5   | LAN TLS                    | **Option B: plain HTTP** (no Android PWA install; cookies not Secure). B→A documented                        | 2026-07-21 |
+| 6   | Seed item `____Head`       | Placeholder; owner will rename it in Settings later                                                          | 2026-07-21 |
+| 7   | First OWNER                | Bootstrapped by the seed from `BOOTSTRAP_OWNER_*` if no users exist                                          | 2026-07-21 |
+| 8   | Session storage            | **DB-backed** (`Session` table in `pm`); signed cookie holds a hashed token; revocable, sliding 7-day expiry | 2026-07-22 |
+| 9   | New-user passwords         | OWNER sets an initial password; user can change it later via a change-password screen                        | 2026-07-22 |
+| 10  | Login security             | Basic rate limiting via `@nestjs/throttler` (tight on `/auth/login`)                                         | 2026-07-22 |
 
 _Add rows here as we decide things. Never silently change a past decision — add a new row._

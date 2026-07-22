@@ -12,8 +12,8 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 | #   | Phase                                                               | Status |
 | --- | ------------------------------------------------------------------- | ------ |
 | 1   | Monorepo scaffold, Docker Compose, Prisma schema + migration + seed | ✅     |
-| 2   | Auth, users, roles, audit log, exception filter, logging            | 🔜     |
-| 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | ⬜     |
+| 2   | Auth, users, roles, audit log, exception filter, logging            | ✅     |
+| 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | 🔜     |
 | 4   | Items module + autocomplete matcher (+ full test suite)             | ⬜     |
 | 5   | Entries + expenses, add-entry form, project detail with rollups     | ⬜     |
 | 6   | Analysis view, filters, CSV export                                  | ⬜     |
@@ -62,7 +62,52 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 
 ---
 
-## Phase 2 — plan (next)
+## Phase 2 — done (2026-07-22)
+
+**Delivered**
+
+- **Sessions**: DB-backed `Session` table (migration `0002_sessions`); signed httpOnly cookie
+  carries a random token whose SHA-256 hash is stored; sliding 7-day expiry; revocable.
+- **Auth API**: `POST /auth/login` (throttled), `POST /auth/logout`, `GET /auth/me`,
+  `POST /auth/change-password`. argon2id hashing. Generic login failure message (no user
+  enumeration). Password change revokes all sessions.
+- **Guards**: global `AuthGuard` (`@Public()` opt-out) + `RolesGuard` (`@Roles('OWNER')`),
+  enforced server-side. `@nestjs/throttler` global + tight on login.
+- **Users API** (OWNER-only): list / create (owner-set password) / update (name, role,
+  isActive). Email lowercased + unique. Guards the last active OWNER from lock-out. Deactivation
+  or role change revokes that user's sessions immediately.
+- **Cross-cutting**: global exception filter (typed domain errors → clean HTTP; Zod → 400 with
+  field errors; Prisma P2002/P2025 mapped; nothing else leaks — generic 500). `AuditService`
+  writes before/after rows on user mutations. `ZodValidationPipe` validates every payload with
+  the shared schema.
+- **Web**: react-router; typed API client with `ApiError`; `useSession`/`useLogin`/`useLogout`/
+  `useChangePassword`; login page; authenticated app shell (role-aware nav, sign-out);
+  route guards (`RequireAuth`, `RequireOwner`); Settings → Users (list, add-user dialog,
+  role change, activate/deactivate); change-password screen; hand-written shadcn UI primitives.
+- **Contracts** in `packages/shared`: `auth`, `user`, `api-error`.
+
+**Verification**
+
+| Gate                         | Result                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `pnpm -r build`              | ✅                                                                     |
+| `pnpm -r typecheck`          | ✅                                                                     |
+| `pnpm lint` / `format:check` | ✅                                                                     |
+| shared unit tests            | ✅ 21/21 (money, dates, auth, user schemas)                            |
+| api unit tests               | ✅ 12/12 (password argon2, exception-filter mapping, last-owner guard) |
+| integration / e2e            | ⚠️ **not run** — need a live Postgres; deferred to the mini PC / CI    |
+| `docker compose up`          | ⚠️ still needs a real run on the target (Docker not on the dev Mac)    |
+
+**Known follow-ups**
+
+- Integration tests (login, role gating, audit-row-on-mutation) and the Playwright e2e smoke
+  are written into the plan but need a database to execute; wire them on the target or in CI.
+- Expired-session pruning is opportunistic (per request). A periodic prune can come with the
+  Phase 8 cron work if the `Session` table ever grows.
+
+---
+
+## Phase 2 — original plan (for reference)
 
 **Goal:** a user can log in, sessions are enforced by role across the API, and every mutating
 request is audited. No client/project features yet — this is the security spine.
@@ -114,7 +159,11 @@ request is audited. No client/project features yet — this is the security spin
 
 ---
 
-## How to run what exists today (Phase 1)
+## How to run what exists today
+
+> After bring-up you now land on a **login page**. Sign in with the bootstrap OWNER from your
+> `.env` (`BOOTSTRAP_OWNER_EMAIL` / `BOOTSTRAP_OWNER_PASSWORD`), then Settings → Users to add
+> the rest of your staff. Change the owner password from Settings → Password afterwards.
 
 **Option A — Docker (matches production; needs Docker installed):**
 
