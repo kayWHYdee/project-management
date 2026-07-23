@@ -1,4 +1,4 @@
-# Water PM
+# uniquepm
 
 Internal project-management tool for a water-treatment business: for each project,
 track its status, what has been sent to it, and what has been spent. Runs entirely on
@@ -127,11 +127,24 @@ Conventional Commits.
 
 ## Backups
 
-Nightly `pg_dump` to a mounted host directory, with a tested restore procedure, is set
-up in **Phase 8**. Not yet configured.
+A backup is a single `.sql` dump written to `./backups`:
+
+```bash
+scripts/backup.sh                              # or  pwsh -File scripts\backup.ps1
+scripts/restore.sh backups/uniquepm-…​.sql      # restore (overwrites current data)
+```
+
+Schedule `backup.sh` / `backup.ps1` nightly, test the restore into a scratch database, and copy
+the newest dump to cloud storage weekly. Full instructions — Windows host, phone/tablet clients,
+scheduling and cloud upload — are in **[SETUP.md](SETUP.md)**.
+
+## Setup & operations
+
+See **[SETUP.md](SETUP.md)** for the complete guide: running the host on Windows, connecting iOS /
+Android / Windows devices over the office wifi, backups & restore, and daily operation.
 
 ## Build phases
 
-This project is built in reviewed phases (see the original brief). **Phase 1** —
-monorepo scaffold, Docker Compose, Prisma schema + migration + seed, and a health-checked
-skeleton — is what this README currently describes.
+Built in reviewed phases (see [PROGRESS.md](PROGRESS.md)). All eight phases are complete:
+scaffold → auth/users → clients/projects/systems → items + autocomplete → entries/expenses +
+rollups → analysis + CSV → settings (item merge) → backups + this documentation.

@@ -18,7 +18,7 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 | 5   | Entries + expenses, add-entry form, project detail with rollups     | ✅     |
 | 6   | Analysis view, filters, CSV export                                  | ✅     |
 | 7   | Settings: items (incl. merge), users                                | ✅     |
-| 8   | Backups (nightly pg_dump + tested restore), full README             | 🔜     |
+| 8   | Backups (nightly pg_dump + tested restore), full README             | ✅     |
 
 ---
 
@@ -268,6 +268,26 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 
 - Editing a client can change values but not blank an optional field (empty input is treated as
   "unchanged"); rare in practice. Easy to revisit if needed.
+
+---
+
+## Phase 8 — done (2026-07-22)
+
+**Delivered** — ops / hand-over:
+
+- **Backup + restore scripts** (`scripts/backup.{sh,ps1}`, `scripts/restore.{sh,ps1}`): a
+  timestamped `pg_dump` `.sql` file to `./backups` with 14-day rotation; restore with a typed
+  confirmation. Plus a documented **non-destructive restore test** (restore into a throwaway DB).
+- **[SETUP.md](SETUP.md)** — the full operator guide: Windows host (Docker Desktop/WSL2, `.env`,
+  run, LAN reach via IP/mDNS, firewall, DHCP reservation, auto-restart/update), connecting
+  iOS / Android / Windows client devices, nightly backup scheduling (Task Scheduler), restore, and
+  a weekly copy to cloud storage (sync-folder or `rclone`).
+- README updated (backups section + setup pointer). App renamed to **uniquepm** (user-facing).
+
+**Note**
+
+- The restore has been written and syntax-checked but, like `docker compose up`, a real end-to-end
+  run needs Docker + a live database on the target — do the "test your backup once" step there.
 
 ---
 
