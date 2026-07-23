@@ -204,7 +204,7 @@ export function AddEntryDialog({ projectId, systems, canAdd }: AddEntryDialogPro
             )}
           </Field>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Quantity" htmlFor="quantity" error={errors.quantity}>
               <Input
                 id="quantity"
@@ -220,15 +220,16 @@ export function AddEntryDialog({ projectId, systems, canAdd }: AddEntryDialogPro
                 onChange={(event) => setDraft((d) => ({ ...d, unit: event.target.value }))}
               />
             </Field>
-            <Field label="Date" htmlFor="sentOn" error={errors.sentOn}>
-              <Input
-                id="sentOn"
-                type="date"
-                value={draft.sentOn}
-                onChange={(event) => setDraft((d) => ({ ...d, sentOn: event.target.value }))}
-              />
-            </Field>
           </div>
+
+          <Field label="Date" htmlFor="sentOn" error={errors.sentOn}>
+            <Input
+              id="sentOn"
+              type="date"
+              value={draft.sentOn}
+              onChange={(event) => setDraft((d) => ({ ...d, sentOn: event.target.value }))}
+            />
+          </Field>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Rate (₹, optional)" htmlFor="rate" error={errors.rate}>

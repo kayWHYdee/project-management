@@ -11,7 +11,7 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
   'QUOTED',
   'IN_PROGRESS',
   'HANDED_OVER',
-  'UNDER_MAINTENANCE',
+  'DLP',
   'CLOSED',
 ];
 
@@ -20,7 +20,7 @@ const STATUS_META: Record<ProjectStatus, StatusMeta> = {
   QUOTED: { label: 'Quoted', variant: 'default' },
   IN_PROGRESS: { label: 'In progress', variant: 'default' },
   HANDED_OVER: { label: 'Handed over', variant: 'success' },
-  UNDER_MAINTENANCE: { label: 'Under maintenance', variant: 'default' },
+  DLP: { label: 'DLP', variant: 'default' },
   CLOSED: { label: 'Closed', variant: 'muted' },
 };
 

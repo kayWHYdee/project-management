@@ -1,4 +1,4 @@
-import { formatInr, type Entry, type ItemRollup } from '@water-pm/shared';
+import { entryRollupKey, formatInr, type ItemRollup } from '@water-pm/shared';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import {
@@ -10,8 +10,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useEntries } from './hooks';
-
-const entryKey = (entry: Entry) => entry.itemId ?? `custom:${entry.customName ?? ''}`;
 
 export function ItemRollupTable({
   projectId,
@@ -45,7 +43,9 @@ export function ItemRollupTable({
         <TableBody>
           {rollups.map((rollup) => {
             const isOpen = expanded === rollup.key;
-            const behind = (entries.data ?? []).filter((entry) => entryKey(entry) === rollup.key);
+            const behind = (entries.data ?? []).filter(
+              (entry) => entryRollupKey(entry) === rollup.key,
+            );
             return (
               <Fragment key={rollup.key}>
                 <TableRow

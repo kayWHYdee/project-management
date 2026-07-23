@@ -4,15 +4,19 @@ import {
   humaniseSystemType,
   type ProjectStatus,
 } from '@water-pm/shared';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
+import { StatTile } from '@/components/ui/stat-tile';
 import { PROJECT_STATUSES, projectStatusLabel } from '@/lib/project-status';
 import { AddSystemDialog } from '@/features/projects/AddSystemDialog';
+import { EditDescriptionDialog } from '@/features/projects/EditDescriptionDialog';
+import { EditBudgetDialog } from '@/features/projects/EditBudgetDialog';
 import {
   useDeleteProject,
   useDeleteSystem,
@@ -23,6 +27,7 @@ import {
 import { EntriesSection } from '@/features/entries/EntriesSection';
 import { ItemRollupTable } from '@/features/entries/ItemRollupTable';
 import { ExpensesSection } from '@/features/expenses/ExpensesSection';
+import { PaymentsSection } from '@/features/payments/PaymentsSection';
 import { useCanWrite } from '@/features/auth/hooks';
 
 export function ProjectDetailPage() {
@@ -34,6 +39,8 @@ export function ProjectDetailPage() {
   const updateProject = useUpdateProject(id);
   const deleteProject = useDeleteProject();
   const deleteSystem = useDeleteSystem(id);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editingBudget, setEditingBudget] = useState(false);
 
   if (project.isPending) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -109,32 +116,51 @@ export function ProjectDetailPage() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryTile
-          label="Budget"
-          value={financials?.budget ? formatInr(financials.budget) : '—'}
-        />
-        <SummaryTile
-          label="Spent (materials + expenses)"
-          value={financials ? formatInr(financials.totalSpent) : '—'}
-        />
-        <SummaryTile
-          label="Remaining"
-          value={financials?.remaining ? formatInr(financials.remaining) : '—'}
-          highlight={financials?.remaining ? financials.remaining.startsWith('-') : false}
-        />
-      </div>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Overview</h2>
+          {canWrite && (
+            <Button variant="ghost" size="sm" onClick={() => setEditingBudget(true)}>
+              <Pencil className="h-4 w-4" /> Edit budget
+            </Button>
+          )}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatTile
+            label="Budget"
+            value={financials?.budget ? formatInr(financials.budget) : '—'}
+          />
+          <StatTile
+            label="Spent (materials + expenses)"
+            value={financials ? formatInr(financials.totalSpent) : '—'}
+          />
+          <StatTile
+            label="Remaining"
+            value={financials?.remaining ? formatInr(financials.remaining) : '—'}
+            highlight={financials?.remaining ? financials.remaining.startsWith('-') : false}
+          />
+          <StatTile
+            label="Payments received"
+            value={financials ? formatInr(financials.paymentsReceived) : '—'}
+          />
+        </div>
+      </section>
 
-      {data.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Description</CardTitle>
-          </CardHeader>
-          <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">
-            {data.description}
-          </CardContent>
-        </Card>
-      )}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Description</h2>
+          {canWrite && (
+            <Button variant="ghost" size="sm" onClick={() => setEditingDescription(true)}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+          )}
+        </div>
+        {data.description ? (
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{data.description}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">No description yet.</p>
+        )}
+      </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -145,9 +171,9 @@ export function ProjectDetailPage() {
           {data.systems.map((system) => {
             const isAuto = AUTO_SYSTEM_TYPES.includes(system.type);
             return (
-              <Card key={system.id}>
+              <Card key={system.id} className="transition-colors hover:bg-secondary/40">
                 <CardContent className="flex items-start justify-between gap-2 p-4">
-                  <div>
+                  <Link to={`/projects/${id}/systems/${system.id}`} className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{system.label}</span>
                       <Badge variant="muted">{humaniseSystemType(system.type)}</Badge>
@@ -155,7 +181,7 @@ export function ProjectDetailPage() {
                     {system.notes && (
                       <p className="mt-1 text-xs text-muted-foreground">{system.notes}</p>
                     )}
-                  </div>
+                  </Link>
                   {canWrite && !isAuto && (
                     <Button
                       variant="ghost"
@@ -173,31 +199,33 @@ export function ProjectDetailPage() {
         </div>
       </section>
 
-      <EntriesSection projectId={id} systems={data.systems} canWrite={canWrite} />
-
       <section className="space-y-3">
         <h2 className="text-sm font-medium">Item summary</h2>
         <ItemRollupTable projectId={id} rollups={summary.data?.itemRollups ?? []} />
       </section>
 
-      <ExpensesSection projectId={id} canWrite={canWrite} />
-    </div>
-  );
-}
+      <EntriesSection projectId={id} systems={data.systems} canWrite={canWrite} />
 
-function SummaryTile({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-lg font-semibold ${highlight ? 'text-destructive' : ''}`}>{value}</p>
+      <ExpensesSection projectId={id} canWrite={canWrite} />
+
+      <PaymentsSection projectId={id} canWrite={canWrite} />
+
+      {editingDescription && (
+        <EditDescriptionDialog
+          projectId={id}
+          version={data.version}
+          description={data.description}
+          onClose={() => setEditingDescription(false)}
+        />
+      )}
+      {editingBudget && (
+        <EditBudgetDialog
+          projectId={id}
+          version={data.version}
+          budget={data.budgetValue}
+          onClose={() => setEditingBudget(false)}
+        />
+      )}
     </div>
   );
 }

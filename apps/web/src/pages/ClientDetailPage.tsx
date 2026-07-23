@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { projectStatusLabel, projectStatusVariant } from '@/lib/project-status';
 import { EditClientDialog } from '@/features/clients/EditClientDialog';
+import { CreateProjectDialog } from '@/features/projects/CreateProjectDialog';
 import { useClient, useDeleteClient } from '@/features/clients/hooks';
 import { useProjects } from '@/features/projects/hooks';
 import { useCanWrite } from '@/features/auth/hooks';
@@ -89,7 +90,10 @@ export function ClientDetailPage() {
       )}
 
       <div>
-        <h2 className="mb-2 text-sm font-medium">Projects</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium">Projects</h2>
+          {canWrite && <CreateProjectDialog defaultClientId={id} />}
+        </div>
         <div className="rounded-lg border">
           <Table>
             <TableHeader>

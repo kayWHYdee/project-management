@@ -12,6 +12,7 @@ import { downloadCsv } from '@/lib/csv';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { StatTile } from '@/components/ui/stat-tile';
 import {
   Table,
   TableBody,
@@ -151,9 +152,18 @@ export function AnalysisPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <SummaryCard label="Total quantity" value={result?.summary.totalQuantity ?? '—'} />
-            <SummaryCard label="Projects" value={String(result?.summary.projectCount ?? '—')} />
-            <SummaryCard
+            <StatTile
+              size="lg"
+              label="Total quantity"
+              value={result?.summary.totalQuantity ?? '—'}
+            />
+            <StatTile
+              size="lg"
+              label="Projects"
+              value={String(result?.summary.projectCount ?? '—')}
+            />
+            <StatTile
+              size="lg"
               label="Total value"
               value={result ? formatInr(result.summary.totalValue) : '—'}
             />
@@ -229,15 +239,6 @@ export function AnalysisPage() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function SummaryCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
 }

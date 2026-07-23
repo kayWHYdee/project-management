@@ -50,9 +50,7 @@ export function AddExpenseDialog({ projectId }: { projectId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Add expense
-        </Button>
+        <Button>Add expense</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

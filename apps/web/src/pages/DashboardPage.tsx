@@ -1,6 +1,7 @@
 import type { Project, ProjectStatus } from '@water-pm/shared';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { StatTile } from '@/components/ui/stat-tile';
 import {
   Table,
   TableBody,
@@ -43,10 +44,12 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {PROJECT_STATUSES.map((status) => (
-          <div key={status} className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">{projectStatusLabel(status)}</p>
-            <p className="mt-1 text-2xl font-semibold">{counts ? counts[status] : '–'}</p>
-          </div>
+          <StatTile
+            key={status}
+            size="lg"
+            label={projectStatusLabel(status)}
+            value={counts ? String(counts[status]) : '–'}
+          />
         ))}
       </div>
 

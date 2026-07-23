@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateEntryRequest } from '@water-pm/shared';
+import type { CreateEntryRequest, UpdateEntryRequest } from '@water-pm/shared';
 import { entriesApi } from './api';
 
 export function useEntries(projectId: string) {
@@ -22,6 +22,15 @@ export function useCreateEntry(projectId: string) {
   const invalidate = useEntryInvalidation(projectId);
   return useMutation({
     mutationFn: (body: CreateEntryRequest) => entriesApi.create(body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateEntry(projectId: string) {
+  const invalidate = useEntryInvalidation(projectId);
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateEntryRequest }) =>
+      entriesApi.update(id, body),
     onSuccess: invalidate,
   });
 }

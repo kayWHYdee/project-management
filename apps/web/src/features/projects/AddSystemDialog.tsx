@@ -52,9 +52,7 @@ export function AddSystemDialog({ projectId }: { projectId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Add system
-        </Button>
+        <Button>Add system</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
