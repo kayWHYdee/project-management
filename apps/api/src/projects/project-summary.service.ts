@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   buildFinancials,
   buildItemRollups,
+  entryRollupKey,
   type ProjectSummary,
   type RollupEntryInput,
 } from '@water-pm/shared';
@@ -24,19 +25,21 @@ export class ProjectSummaryService {
       where: { deletedAt: null, system: { projectId, deletedAt: null } },
       include: { item: true },
     });
-    const expenses = await this.prisma.expense.findMany({
-      where: { projectId, deletedAt: null },
-    });
+    const [expenses, payments] = await Promise.all([
+      this.prisma.expense.findMany({ where: { projectId, deletedAt: null } }),
+      this.prisma.payment.findMany({ where: { projectId, deletedAt: null } }),
+    ]);
 
     const budget = project.budgetValue ? project.budgetValue.toFixed(2) : null;
     const financials = buildFinancials({
       budget,
       entryAmounts: entries.filter((e) => e.amount !== null).map((e) => e.amount!.toFixed(2)),
       expenseAmounts: expenses.map((x) => x.amount.toFixed(2)),
+      paymentAmounts: payments.map((p) => p.amount.toFixed(2)),
     });
 
     const rollupInputs: RollupEntryInput[] = entries.map((entry) => ({
-      key: entry.itemId ?? `custom:${entry.customName ?? ''}`,
+      key: entryRollupKey(entry),
       name: entry.item?.name ?? entry.customName ?? '(unnamed)',
       category: entry.item?.category ?? null,
       quantity: entry.quantity.toFixed(3),

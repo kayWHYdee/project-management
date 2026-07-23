@@ -16,6 +16,7 @@ import { SystemsModule } from './systems/systems.module';
 import { ItemsModule } from './items/items.module';
 import { EntriesModule } from './entries/entries.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { PaymentsModule } from './payments/payments.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { HealthModule } from './health/health.module';
 
@@ -34,6 +35,7 @@ import { HealthModule } from './health/health.module';
     ItemsModule,
     EntriesModule,
     ExpensesModule,
+    PaymentsModule,
     AnalysisModule,
     HealthModule,
   ],
