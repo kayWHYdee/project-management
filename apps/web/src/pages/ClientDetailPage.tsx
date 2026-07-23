@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { projectStatusLabel, projectStatusVariant } from '@/lib/project-status';
+import { EditClientDialog } from '@/features/clients/EditClientDialog';
 import { useClient, useDeleteClient } from '@/features/clients/hooks';
 import { useProjects } from '@/features/projects/hooks';
 import { useCanWrite } from '@/features/auth/hooks';
@@ -24,6 +26,7 @@ export function ClientDetailPage() {
   const client = useClient(id);
   const projects = useProjects({ clientId: id });
   const deleteClient = useDeleteClient();
+  const [editing, setEditing] = useState(false);
 
   const onDelete = () => {
     if (!window.confirm('Delete this client?')) return;
@@ -55,11 +58,18 @@ export function ClientDetailPage() {
           </p>
         </div>
         {canWrite && (
-          <Button variant="outline" onClick={onDelete} disabled={deleteClient.isPending}>
-            Delete client
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+            <Button variant="outline" onClick={onDelete} disabled={deleteClient.isPending}>
+              Delete client
+            </Button>
+          </div>
         )}
       </div>
+
+      {editing && <EditClientDialog client={client.data} onClose={() => setEditing(false)} />}
 
       {deleteError && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
