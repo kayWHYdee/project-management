@@ -16,9 +16,9 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 | 3   | Clients → Projects → Systems CRUD (+ auto Spares/Consumables)       | ✅     |
 | 4   | Items module + autocomplete matcher (+ full test suite)             | ✅     |
 | 5   | Entries + expenses, add-entry form, project detail with rollups     | ✅     |
-| 6   | Analysis view, filters, CSV export                                  | 🔜     |
-| 7   | Settings: items (incl. merge), users                                | ⬜     |
-| 8   | Backups (nightly pg_dump + tested restore), full README             | ⬜     |
+| 6   | Analysis view, filters, CSV export                                  | ✅     |
+| 7   | Settings: items (incl. merge), users                                | ✅     |
+| 8   | Backups (nightly pg_dump + tested restore), full README             | 🔜     |
 
 ---
 
@@ -211,6 +211,63 @@ Legend: ✅ done · 🔜 next · ⬜ not started
 - Entry _edit_ has an API + optimistic lock but no dedicated UI yet (delete + re-add is the
   primary flow, matching the "entries are records, not assets" grain). Easy to add an edit dialog.
 - No new migration (Entry/Expense tables existed from `0001_init`).
+
+---
+
+## Phase 6 — done (2026-07-22)
+
+**Delivered** — the item dashboard (analysis):
+
+- **Analysis API** (`GET /analysis/item/:itemId`): every entry of a chosen item **across all
+  projects**, filtered by client / project status / system type / date range. Summary =
+  total quantity, distinct **project count**, total value — via the shared money helpers. Uses
+  the `entries(item_id)` index the schema reserved for exactly this path. Reads for any user.
+- **Web Analysis page**: item combobox (includes inactive so historical items are analysable),
+  the four filters, summary cards, a Project / System / Description / Qty / Sent-on / Amount
+  table with **row-click → project**, and **CSV export** (client-side, RFC-4180 quoting). New
+  "Analysis" nav link.
+
+**Verification**
+
+| Gate                          | Result                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `pnpm -r build` / `typecheck` | ✅                                                                     |
+| `pnpm lint` / `format:check`  | ✅                                                                     |
+| unit tests                    | ✅ 77 total (51 shared + 24 api + 2 web) — adds analysis summary + CSV |
+| integration / e2e             | ⚠️ still need a live Postgres — pending on the mini PC / CI            |
+
+---
+
+## Phase 7 — done (2026-07-22)
+
+**Delivered** — Settings polish:
+
+- **Items management** (Settings → Items): the catalog table now shows **usage counts** (active
+  entries per item) and, for OWNER/EDITOR, actions to **rename**, **change category**,
+  **activate/deactivate**, and **merge**. Merge repoints every entry (including soft-deleted, to
+  keep history) from the source item to a target in a transaction, then deactivates the source;
+  the confirm dialog shows how many entries will move. Renaming lives **only** here. VIEWER sees
+  the catalog read-only.
+- **API**: `GET /items/managed` (usage counts via a filtered relation count), `PATCH /items/:id`
+  (rename/category/active, unique-name → 409), `POST /items/:id/merge` (self/target guarded,
+  audited with a new `MERGE` action).
+- **Client edit** (the Phase 3 deferral): an edit dialog on the client detail page, wired to the
+  existing `PATCH /clients/:id`.
+- **Users management** already shipped in Phase 2 (Settings → Users).
+
+**Verification**
+
+| Gate                          | Result                                                      |
+| ----------------------------- | ----------------------------------------------------------- |
+| `pnpm -r build` / `typecheck` | ✅                                                          |
+| `pnpm lint` / `format:check`  | ✅                                                          |
+| unit tests                    | ✅ 79 total (51 shared + 26 api + 2 web) — adds item merge  |
+| integration / e2e             | ⚠️ still need a live Postgres — pending on the mini PC / CI |
+
+**Note**
+
+- Editing a client can change values but not blank an optional field (empty input is treated as
+  "unchanged"); rare in practice. Easy to revisit if needed.
 
 ---
 
