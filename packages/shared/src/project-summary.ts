@@ -19,6 +19,7 @@ export const projectFinancialsSchema = z.object({
   expensesAmount: z.string(),
   totalSpent: z.string(),
   remaining: z.string().nullable(),
+  paymentsReceived: z.string(),
 });
 export type ProjectFinancials = z.infer<typeof projectFinancialsSchema>;
 

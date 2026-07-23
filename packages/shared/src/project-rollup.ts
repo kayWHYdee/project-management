@@ -2,9 +2,21 @@ import { subtractMoney, sumMoney, sumQuantity } from './money';
 import type { ItemCategory } from './enums';
 import type { ItemRollup, ProjectFinancials } from './project-summary';
 
+/**
+ * The stable grouping key for an entry: its itemId, or `custom:<name>` for a
+ * custom-named spare. Single source of truth so the server's rollup keys and the
+ * client's "expand the entries behind a rollup" logic can never drift apart.
+ */
+export function entryRollupKey(entry: {
+  itemId: string | null;
+  customName: string | null;
+}): string {
+  return entry.itemId ?? `custom:${entry.customName ?? ''}`;
+}
+
 /** Minimal per-entry shape the rollups need. Pure — no DB or framework types. */
 export interface RollupEntryInput {
-  /** Stable grouping key: itemId, or `custom:<name>` for custom-named spares. */
+  /** Stable grouping key from {@link entryRollupKey}. */
   key: string;
   name: string;
   category: ItemCategory | null;
@@ -56,15 +68,24 @@ export function buildItemRollups(entries: readonly RollupEntryInput[]): ItemRoll
     .sort((a, b) => a.name.localeCompare(b.name) || a.key.localeCompare(b.key));
 }
 
-/** Budget vs spent (materials + expenses), with remaining when a budget is set. */
+/** Budget vs spent (materials + expenses), remaining, and cumulative payments received. */
 export function buildFinancials(params: {
   budget: string | null;
   entryAmounts: readonly string[];
   expenseAmounts: readonly string[];
+  paymentAmounts: readonly string[];
 }): ProjectFinancials {
   const materialsAmount = sumMoney(params.entryAmounts);
   const expensesAmount = sumMoney(params.expenseAmounts);
   const totalSpent = sumMoney([materialsAmount, expensesAmount]);
   const remaining = params.budget !== null ? subtractMoney(params.budget, totalSpent) : null;
-  return { budget: params.budget, materialsAmount, expensesAmount, totalSpent, remaining };
+  const paymentsReceived = sumMoney(params.paymentAmounts);
+  return {
+    budget: params.budget,
+    materialsAmount,
+    expensesAmount,
+    totalSpent,
+    remaining,
+    paymentsReceived,
+  };
 }

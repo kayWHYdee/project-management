@@ -12,6 +12,7 @@ export * from './item';
 export * from './item-matcher';
 export * from './entry';
 export * from './expense';
+export * from './payment';
 export * from './project-summary';
 export * from './project-rollup';
 export * from './analysis';

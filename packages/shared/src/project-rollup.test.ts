@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { buildFinancials, buildItemRollups, type RollupEntryInput } from './project-rollup';
+import {
+  buildFinancials,
+  buildItemRollups,
+  entryRollupKey,
+  type RollupEntryInput,
+} from './project-rollup';
+
+describe('entryRollupKey', () => {
+  it('uses the itemId, or custom:<name> for custom-named spares', () => {
+    expect(entryRollupKey({ itemId: 'i1', customName: null })).toBe('i1');
+    expect(entryRollupKey({ itemId: null, customName: 'Odd spare' })).toBe('custom:Odd spare');
+    expect(entryRollupKey({ itemId: null, customName: null })).toBe('custom:');
+  });
+});
 
 describe('buildItemRollups', () => {
   it('groups entries by key and sums quantity + value with no float drift', () => {
@@ -28,24 +41,32 @@ describe('buildItemRollups', () => {
 });
 
 describe('buildFinancials', () => {
-  it('computes spent and remaining against a budget', () => {
+  it('computes spent, remaining and cumulative payments against a budget', () => {
     const financials = buildFinancials({
       budget: '100000.00',
       entryAmounts: ['5000.00', '2500.50'],
       expenseAmounts: ['1200.00'],
+      paymentAmounts: ['30000.00', '20000.00'],
     });
     expect(financials.materialsAmount).toBe('7500.50');
     expect(financials.expensesAmount).toBe('1200.00');
     expect(financials.totalSpent).toBe('8700.50');
     expect(financials.remaining).toBe('91299.50');
+    expect(financials.paymentsReceived).toBe('50000.00');
   });
 
   it('leaves remaining null when there is no budget and can go negative', () => {
-    expect(buildFinancials({ budget: null, entryAmounts: [], expenseAmounts: [] }).remaining).toBe(
-      null,
-    );
     expect(
-      buildFinancials({ budget: '100.00', entryAmounts: ['150.00'], expenseAmounts: [] }).remaining,
+      buildFinancials({ budget: null, entryAmounts: [], expenseAmounts: [], paymentAmounts: [] })
+        .remaining,
+    ).toBe(null);
+    expect(
+      buildFinancials({
+        budget: '100.00',
+        entryAmounts: ['150.00'],
+        expenseAmounts: [],
+        paymentAmounts: [],
+      }).remaining,
     ).toBe('-50.00');
   });
 });

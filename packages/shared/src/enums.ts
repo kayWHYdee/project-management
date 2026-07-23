@@ -10,7 +10,7 @@ export const projectStatusSchema = z.enum([
   'QUOTED',
   'IN_PROGRESS',
   'HANDED_OVER',
-  'UNDER_MAINTENANCE',
+  'DLP',
   'CLOSED',
 ]);
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
