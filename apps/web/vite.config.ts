@@ -16,8 +16,8 @@ export default defineConfig({
         runtimeCaching: [],
       },
       manifest: {
-        name: 'Water PM',
-        short_name: 'Water PM',
+        name: 'uniquepm',
+        short_name: 'uniquepm',
         description: 'Water treatment project management',
         theme_color: '#0f172a',
         background_color: '#ffffff',

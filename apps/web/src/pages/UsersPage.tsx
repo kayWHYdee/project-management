@@ -27,7 +27,7 @@ export function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
-          <p className="text-sm text-muted-foreground">Manage who can access Water PM.</p>
+          <p className="text-sm text-muted-foreground">Manage who can access uniquepm.</p>
         </div>
         <CreateUserDialog />
       </div>

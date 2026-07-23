@@ -24,7 +24,7 @@ export function AppShell() {
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
           <div className="flex items-center gap-1">
-            <span className="mr-3 font-semibold">Water PM</span>
+            <span className="mr-3 font-semibold">uniquepm</span>
             <NavLink to="/" end className={navLinkClass}>
               Dashboard
             </NavLink>

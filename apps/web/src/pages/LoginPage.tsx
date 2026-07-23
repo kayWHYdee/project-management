@@ -41,7 +41,7 @@ export function LoginPage() {
     <main className="flex min-h-dvh items-center justify-center bg-secondary/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Water PM</CardTitle>
+          <CardTitle>uniquepm</CardTitle>
           <CardDescription>Sign in to continue</CardDescription>
         </CardHeader>
         <CardContent>
