@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
-export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'PASSWORD_CHANGE';
+export type AuditAction =
+  'CREATE' | 'UPDATE' | 'DELETE' | 'MERGE' | 'LOGIN' | 'LOGOUT' | 'PASSWORD_CHANGE';
 
 export interface AuditRecord {
   userId?: string | null;
