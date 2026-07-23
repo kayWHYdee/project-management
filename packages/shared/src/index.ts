@@ -14,3 +14,4 @@ export * from './entry';
 export * from './expense';
 export * from './project-summary';
 export * from './project-rollup';
+export * from './analysis';
