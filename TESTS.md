@@ -28,20 +28,28 @@ and [PROGRESS.md](PROGRESS.md)._
 7. **Assert behaviour, not implementation.** Tests call the public surface (a schema's
    `parse`, a service method, the exception filter's `catch`) and assert the observable result.
 
-## What needs a database (and therefore isn't run on the dev machine yet)
+## Three layers, all wired up
 
-The dev machine has no Docker/Postgres, so **integration and e2e tests are written into the
-plan but not yet executed** — run them on the mini PC or in CI where a Postgres is available.
-Everything below marked _unit_ runs today with `pnpm -r test`.
+- **Unit** — fast, no external deps. `pnpm -r test`.
+- **Integration** — the real NestJS app against a throwaway Postgres spun up by **Testcontainers**
+  (needs Docker). `pnpm --filter @water-pm/api test:int`.
+- **End-to-end** — one **Playwright** smoke path in a real browser against a running stack.
+  `pnpm --filter @water-pm/web e2e` (after `… e2e:install` once for the browser).
 
 ## Commands
 
 ```bash
-pnpm -r test                        # all unit tests (shared + api)
-pnpm --filter @water-pm/shared test # shared only
-pnpm --filter @water-pm/api test    # api only
-pnpm -r typecheck                   # strict types across the monorepo
-pnpm lint                           # ESLint (no `any`)
+pnpm -r test                         # all unit tests (shared + api + web)
+pnpm -r typecheck                    # strict types across the monorepo
+pnpm lint                            # ESLint (no `any`)
+
+# integration (needs Docker; Testcontainers starts its own Postgres):
+pnpm --filter @water-pm/api test:int
+
+# e2e (needs the stack running at E2E_BASE_URL, default http://localhost):
+pnpm --filter @water-pm/web e2e:install   # once, downloads the browser
+E2E_OWNER_EMAIL=owner@example.com E2E_OWNER_PASSWORD=… \
+  pnpm --filter @water-pm/web e2e
 ```
 
 ---
@@ -108,18 +116,21 @@ pnpm lint                           # ESLint (no `any`)
 
 ---
 
-## Planned but not yet executed (need a database)
+## Integration — `apps/api/test/app.int-spec.ts` (5 tests)
 
-### API integration (per module, against a test Postgres)
+Boots the real app against a fresh Testcontainers Postgres with the actual migrations applied:
 
-- **Auth**: login success sets a session cookie; wrong password / inactive user → 401 with the
-  same generic message; `/auth/me` returns the session user; logout revokes the session;
-  change-password invalidates existing sessions.
-- **Users**: OWNER can create/list/update; a VIEWER/EDITOR is refused (`403`); creating a
-  duplicate email → 409; a mutation writes an `AuditLog` row.
-- **Guards**: an unauthenticated request to a protected route → 401; a non-OWNER to `/users` → 403.
+- Login returns the session user from `/auth/me` (signed cookie round-trip).
+- A wrong password → generic 401 (`"Invalid email or password"`).
+- A VIEWER is refused a write (`403`); an OWNER succeeds and an `AuditLog` row is written.
+- A non-OWNER is refused `GET /users` (`403`).
+- An invalid payload → 400 `VALIDATION` with `fieldErrors` (the shared Zod schema on the server).
 
-### End-to-end (Playwright, one smoke path)
+## End-to-end — `apps/web/e2e/smoke.e2e.ts` (Playwright, 1 smoke path)
 
-- Log in → create client → create project → add a system → add an entry → verify it appears in
-  the analysis view. (Arrives with the features it exercises, Phases 3–6.)
+The brief's single smoke test, in a real browser against the running stack — **and it cleans up
+after itself** (deletes the client + project it creates), so it's safe to run against a live
+instance:
+
+- Log in → create client → create project (auto Spares/Consumables present) → add an entry via the
+  autocomplete → see it in the item summary → find it in the Analysis view → delete project + client.
