@@ -3,6 +3,7 @@ import {
   formatInr,
   humaniseSystemType,
   type ProjectStatus,
+  type System,
 } from '@water-pm/shared';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -17,6 +18,7 @@ import { PROJECT_STATUSES, projectStatusLabel } from '@/lib/project-status';
 import { AddSystemDialog } from '@/features/projects/AddSystemDialog';
 import { EditDescriptionDialog } from '@/features/projects/EditDescriptionDialog';
 import { EditBudgetDialog } from '@/features/projects/EditBudgetDialog';
+import { EditSystemDialog } from '@/features/projects/EditSystemDialog';
 import {
   useDeleteProject,
   useDeleteSystem,
@@ -41,6 +43,7 @@ export function ProjectDetailPage() {
   const deleteSystem = useDeleteSystem(id);
   const [editingDescription, setEditingDescription] = useState(false);
   const [editingBudget, setEditingBudget] = useState(false);
+  const [editingSystem, setEditingSystem] = useState<System | null>(null);
 
   if (project.isPending) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -84,6 +87,7 @@ export function ProjectDetailPage() {
           >
             {data.clientName}
           </Link>
+          <p className="text-sm text-muted-foreground">Start date: {data.startDate ?? 'not set'}</p>
         </div>
         <div className="flex items-center gap-2">
           {canWrite ? (
@@ -182,15 +186,27 @@ export function ProjectDetailPage() {
                       <p className="mt-1 text-xs text-muted-foreground">{system.notes}</p>
                     )}
                   </Link>
-                  {canWrite && !isAuto && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDeleteSystem(system.id)}
-                      aria-label="Remove system"
-                    >
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
+                  {canWrite && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingSystem(system)}
+                        aria-label="Edit system"
+                      >
+                        <Pencil className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      {!isAuto && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDeleteSystem(system.id)}
+                          aria-label="Remove system"
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -224,6 +240,14 @@ export function ProjectDetailPage() {
           version={data.version}
           budget={data.budgetValue}
           onClose={() => setEditingBudget(false)}
+        />
+      )}
+      {editingSystem && (
+        <EditSystemDialog
+          key={editingSystem.id}
+          projectId={id}
+          system={editingSystem}
+          onClose={() => setEditingSystem(null)}
         />
       )}
     </div>

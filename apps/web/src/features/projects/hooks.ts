@@ -3,6 +3,7 @@ import type {
   CreateProjectRequest,
   CreateSystemRequest,
   UpdateProjectRequest,
+  UpdateSystemRequest,
 } from '@water-pm/shared';
 import { projectsApi, type ProjectListFilter } from './api';
 import { systemsApi } from '../systems/api';
@@ -56,6 +57,15 @@ export function useAddSystem(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CreateSystemRequest) => projectsApi.addSystem(projectId, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
+  });
+}
+
+export function useUpdateSystem(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: UpdateSystemRequest }) =>
+      systemsApi.update(id, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
   });
 }
