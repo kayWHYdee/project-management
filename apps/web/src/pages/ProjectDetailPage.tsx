@@ -16,8 +16,7 @@ import { Select } from '@/components/ui/select';
 import { StatTile } from '@/components/ui/stat-tile';
 import { PROJECT_STATUSES, projectStatusLabel } from '@/lib/project-status';
 import { AddSystemDialog } from '@/features/projects/AddSystemDialog';
-import { EditDescriptionDialog } from '@/features/projects/EditDescriptionDialog';
-import { EditBudgetDialog } from '@/features/projects/EditBudgetDialog';
+import { EditProjectDialog } from '@/features/projects/EditProjectDialog';
 import { EditSystemDialog } from '@/features/projects/EditSystemDialog';
 import {
   useDeleteProject,
@@ -41,8 +40,7 @@ export function ProjectDetailPage() {
   const updateProject = useUpdateProject(id);
   const deleteProject = useDeleteProject();
   const deleteSystem = useDeleteSystem(id);
-  const [editingDescription, setEditingDescription] = useState(false);
-  const [editingBudget, setEditingBudget] = useState(false);
+  const [editingProject, setEditingProject] = useState(false);
   const [editingSystem, setEditingSystem] = useState<System | null>(null);
 
   if (project.isPending) {
@@ -107,6 +105,11 @@ export function ProjectDetailPage() {
             <Badge>{projectStatusLabel(data.status)}</Badge>
           )}
           {canWrite && (
+            <Button variant="outline" onClick={() => setEditingProject(true)}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+          )}
+          {canWrite && (
             <Button variant="outline" onClick={onDeleteProject} disabled={deleteProject.isPending}>
               Delete
             </Button>
@@ -121,14 +124,7 @@ export function ProjectDetailPage() {
       )}
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">Overview</h2>
-          {canWrite && (
-            <Button variant="ghost" size="sm" onClick={() => setEditingBudget(true)}>
-              <Pencil className="h-4 w-4" /> Edit budget
-            </Button>
-          )}
-        </div>
+        <h2 className="text-sm font-medium">Overview</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatTile
             label="Budget"
@@ -151,14 +147,7 @@ export function ProjectDetailPage() {
       </section>
 
       <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">Description</h2>
-          {canWrite && (
-            <Button variant="ghost" size="sm" onClick={() => setEditingDescription(true)}>
-              <Pencil className="h-4 w-4" /> Edit
-            </Button>
-          )}
-        </div>
+        <h2 className="text-sm font-medium">Description</h2>
         {data.description ? (
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">{data.description}</p>
         ) : (
@@ -226,20 +215,11 @@ export function ProjectDetailPage() {
 
       <PaymentsSection projectId={id} canWrite={canWrite} />
 
-      {editingDescription && (
-        <EditDescriptionDialog
-          projectId={id}
-          version={data.version}
-          description={data.description}
-          onClose={() => setEditingDescription(false)}
-        />
-      )}
-      {editingBudget && (
-        <EditBudgetDialog
-          projectId={id}
-          version={data.version}
-          budget={data.budgetValue}
-          onClose={() => setEditingBudget(false)}
+      {editingProject && (
+        <EditProjectDialog
+          key={data.version}
+          project={data}
+          onClose={() => setEditingProject(false)}
         />
       )}
       {editingSystem && (
