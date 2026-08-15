@@ -1,4 +1,4 @@
-import { photoReceivedLabel } from '@water-pm/shared';
+import { photoReceivedLabel, type Visit } from '@water-pm/shared';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { EditEmployeeDialog } from '@/features/employees/EditEmployeeDialog';
 import { useEmployee } from '@/features/employees/hooks';
+import { EditVisitDialog } from '@/features/visits/EditVisitDialog';
 import { useCanWrite } from '@/features/auth/hooks';
 
 export function EmployeeDetailPage() {
@@ -21,6 +22,7 @@ export function EmployeeDetailPage() {
   const canWrite = useCanWrite();
   const employee = useEmployee(id);
   const [editing, setEditing] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
 
   if (employee.isPending) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -72,6 +74,7 @@ export function EmployeeDetailPage() {
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Hours</TableHead>
                   <TableHead>Photo</TableHead>
+                  {canWrite && <TableHead />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -93,6 +96,13 @@ export function EmployeeDetailPage() {
                     <TableCell className="text-muted-foreground">
                       {photoReceivedLabel(visit.photoReceived)}
                     </TableCell>
+                    {canWrite && (
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingVisit(visit)}>
+                          Edit
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -103,6 +113,13 @@ export function EmployeeDetailPage() {
 
       {editing && (
         <EditEmployeeDialog key={data.version} employee={data} onClose={() => setEditing(false)} />
+      )}
+      {editingVisit && (
+        <EditVisitDialog
+          key={editingVisit.id}
+          visit={editingVisit}
+          onClose={() => setEditingVisit(null)}
+        />
       )}
     </div>
   );

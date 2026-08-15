@@ -1,5 +1,6 @@
-import { photoReceivedLabel, type System } from '@water-pm/shared';
-import { Trash2 } from 'lucide-react';
+import { photoReceivedLabel, type System, type Visit } from '@water-pm/shared';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AddVisitDialog } from './AddVisitDialog';
+import { EditVisitDialog } from './EditVisitDialog';
 import { useDeleteVisit, useVisits } from './hooks';
 
 export function VisitsSection({
@@ -26,6 +28,7 @@ export function VisitsSection({
   const visits = useVisits(projectId);
   const deleteVisit = useDeleteVisit(projectId);
   const deleteError = deleteVisit.error instanceof ApiError ? deleteVisit.error.message : null;
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
 
   const onDelete = (id: string) => {
     if (window.confirm('Delete this visit?')) deleteVisit.mutate(id);
@@ -83,14 +86,24 @@ export function VisitsSection({
                   </TableCell>
                   {canWrite && (
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(visit.id)}
-                        aria-label="Delete visit"
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingVisit(visit)}
+                          aria-label="Edit visit"
+                        >
+                          <Pencil className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(visit.id)}
+                          aria-label="Delete visit"
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
@@ -98,6 +111,15 @@ export function VisitsSection({
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {editingVisit && (
+        <EditVisitDialog
+          key={editingVisit.id}
+          visit={editingVisit}
+          systems={systems}
+          onClose={() => setEditingVisit(null)}
+        />
       )}
     </section>
   );
