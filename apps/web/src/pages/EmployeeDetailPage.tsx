@@ -36,14 +36,14 @@ export function EmployeeDetailPage() {
         to="/employees"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Employees
+        <ArrowLeft className="h-4 w-4" /> Man Power
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{data.name}</h1>
-            <Badge variant="muted">{data.role}</Badge>
+            {data.role && <Badge variant="muted">{data.role}</Badge>}
             {!data.isActive && <Badge variant="muted">Inactive</Badge>}
           </div>
           <p className="text-sm text-muted-foreground">Mobile: {data.mobile ?? 'not set'}</p>

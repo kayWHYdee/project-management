@@ -26,13 +26,13 @@ export function AddEmployeeDialog() {
     formState: { errors },
   } = useForm<CreateEmployeeRequest>({
     resolver: zodResolver(createEmployeeRequestSchema),
-    defaultValues: { role: 'Technician' },
+    defaultValues: { role: '' },
   });
 
   const onSubmit = handleSubmit((values) => {
     createEmployee.mutate(values, {
       onSuccess: () => {
-        reset({ role: 'Technician' });
+        reset({ role: '' });
         setOpen(false);
       },
     });
@@ -57,8 +57,8 @@ export function AddEmployeeDialog() {
             <Field label="Mobile (optional)" htmlFor="mobile" error={errors.mobile?.message}>
               <Input id="mobile" inputMode="tel" {...register('mobile')} />
             </Field>
-            <Field label="Role" htmlFor="role" error={errors.role?.message}>
-              <Input id="role" {...register('role')} />
+            <Field label="Role (optional)" htmlFor="role" error={errors.role?.message}>
+              <Input id="role" placeholder="e.g. Technician" {...register('role')} />
             </Field>
           </div>
 

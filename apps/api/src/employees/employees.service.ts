@@ -62,7 +62,8 @@ export class EmployeesService {
       data: {
         name: dto.name,
         mobile: dto.mobile ?? null,
-        ...(dto.role ? { role: dto.role } : {}),
+        // Explicitly set (blank if omitted) so the "Technician" column default is never applied.
+        role: dto.role ?? '',
       },
       include: withVisitIds,
     });

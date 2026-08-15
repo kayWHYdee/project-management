@@ -38,7 +38,7 @@ export function AppShell() {
               Items
             </NavLink>
             <NavLink to="/employees" className={navLinkClass}>
-              Employees
+              Man Power
             </NavLink>
             <NavLink to="/analysis" className={navLinkClass}>
               Analysis

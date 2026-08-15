@@ -212,11 +212,11 @@ export function ProjectDetailPage() {
 
       <EntriesSection projectId={id} systems={data.systems} canWrite={canWrite} />
 
+      <VisitsSection projectId={id} systems={data.systems} canWrite={canWrite} />
+
       <ExpensesSection projectId={id} canWrite={canWrite} />
 
       <PaymentsSection projectId={id} canWrite={canWrite} />
-
-      <VisitsSection projectId={id} systems={data.systems} canWrite={canWrite} />
 
       {editingProject && (
         <EditProjectDialog

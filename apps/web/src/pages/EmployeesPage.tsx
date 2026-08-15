@@ -25,7 +25,7 @@ export function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Man Power</h1>
           <p className="text-sm text-muted-foreground">
             Field staff sent to project sites. Click a name to see the projects they visited.
           </p>
@@ -74,7 +74,11 @@ export function EmployeesPage() {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="muted">{employee.role}</Badge>
+                  {employee.role ? (
+                    <Badge variant="muted">{employee.role}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{employee.mobile ?? '—'}</TableCell>
                 <TableCell className="text-right">{employee.visitCount}</TableCell>

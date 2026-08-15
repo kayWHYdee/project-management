@@ -34,8 +34,8 @@ export type EmployeeDetail = z.infer<typeof employeeDetailSchema>;
 export const createEmployeeRequestSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(160),
   mobile: optionalTrimmed(40),
-  // Blank role falls back to the DB default ("Technician").
-  role: z.string().trim().min(1).max(80).optional(),
+  // Role is free text and may be left blank (no forced default).
+  role: z.string().trim().max(80).optional(),
 });
 export type CreateEmployeeRequest = z.infer<typeof createEmployeeRequestSchema>;
 
@@ -45,7 +45,7 @@ export const updateEmployeeRequestSchema = z
     version: z.number().int().nonnegative(),
     name: z.string().trim().min(1).max(160).optional(),
     mobile: optionalTrimmed(40),
-    role: z.string().trim().min(1).max(80).optional(),
+    role: z.string().trim().max(80).optional(),
     isActive: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).some((key) => key !== 'version'), {
