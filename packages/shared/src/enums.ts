@@ -49,6 +49,22 @@ export type ItemCategory = z.infer<typeof itemCategorySchema>;
 export const roleSchema = z.enum(['OWNER', 'EDITOR', 'VIEWER']);
 export type Role = z.infer<typeof roleSchema>;
 
+/** Whether (and by whom) a site-visit photo was received. */
+export const photoReceivedSchema = z.enum(['YES_CHACHU', 'YES_PRANAV', 'NO']);
+export type PhotoReceived = z.infer<typeof photoReceivedSchema>;
+
+export const PHOTO_RECEIVED_OPTIONS = photoReceivedSchema.options;
+
+const PHOTO_RECEIVED_LABEL: Record<PhotoReceived, string> = {
+  YES_CHACHU: 'Yes (Chachu)',
+  YES_PRANAV: 'Yes (Pranav)',
+  NO: 'No',
+};
+
+export function photoReceivedLabel(value: PhotoReceived): string {
+  return PHOTO_RECEIVED_LABEL[value];
+}
+
 const HUMANISED_SYSTEM_TYPE: Record<SystemType, string> = {
   POOL: 'Pool',
   FOUNTAIN: 'Fountain',

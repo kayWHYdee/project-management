@@ -54,6 +54,7 @@ model Project {
   systems     System[]
   expenses    Expense[]
   payments    Payment[]
+  visits      Visit[]
   version     Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -84,6 +85,7 @@ model System {
   label     String
   notes     String?
   entries   Entry[]
+  visits    Visit[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   deletedAt DateTime?
@@ -147,16 +149,16 @@ model Entry {
 }
 
 model Expense {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id])
   category    String
-  amount      Decimal  @db.Decimal(14, 2)
-  spentOn     DateTime @db.Date
+  amount      Decimal   @db.Decimal(14, 2)
+  spentOn     DateTime  @db.Date
   note        String?
   createdById String?
-  createdBy   User?    @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
   deletedAt   DateTime?
 
   @@index([projectId])
@@ -180,6 +182,59 @@ model Payment {
   @@schema("pm")
 }
 
+// A field worker (technician by default). Reusable across projects — the
+// person equivalent of an Item, linked to projects through Visit rows.
+model Employee {
+  id        String    @id @default(cuid())
+  name      String
+  mobile    String?
+  role      String    @default("Technician")
+  isActive  Boolean   @default(true)
+  visits    Visit[]
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([name])
+  @@schema("pm")
+}
+
+enum PhotoReceived {
+  YES_CHACHU
+  YES_PRANAV
+  NO
+
+  @@schema("pm")
+}
+
+// One employee at one project on one date: the Employee↔Project join, the
+// person equivalent of an Entry. Optionally tags the system worked on.
+model Visit {
+  id            String        @id @default(cuid())
+  projectId     String
+  project       Project       @relation(fields: [projectId], references: [id])
+  employeeId    String
+  employee      Employee      @relation(fields: [employeeId], references: [id])
+  systemId      String?
+  system        System?       @relation(fields: [systemId], references: [id])
+  purpose       String?
+  visitDate     DateTime      @db.Date
+  hours         Decimal?      @db.Decimal(5, 2)
+  photoReceived PhotoReceived @default(NO)
+  createdById   String?
+  createdBy     User?         @relation(fields: [createdById], references: [id])
+  version       Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([visitDate])
+  @@schema("pm")
+}
+
 enum Role {
   OWNER
   EDITOR
@@ -198,6 +253,7 @@ model User {
   entries      Entry[]
   expenses     Expense[]
   payments     Payment[]
+  visits       Visit[]
   sessions     Session[]
   createdAt    DateTime  @default(now())
 

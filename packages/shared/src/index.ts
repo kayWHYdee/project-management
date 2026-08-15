@@ -11,6 +11,8 @@ export * from './project';
 export * from './item';
 export * from './item-matcher';
 export * from './entry';
+export * from './visit';
+export * from './employee';
 export * from './expense';
 export * from './payment';
 export * from './project-summary';

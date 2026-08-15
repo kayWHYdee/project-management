@@ -29,6 +29,7 @@ import { EntriesSection } from '@/features/entries/EntriesSection';
 import { ItemRollupTable } from '@/features/entries/ItemRollupTable';
 import { ExpensesSection } from '@/features/expenses/ExpensesSection';
 import { PaymentsSection } from '@/features/payments/PaymentsSection';
+import { VisitsSection } from '@/features/visits/VisitsSection';
 import { useCanWrite } from '@/features/auth/hooks';
 
 export function ProjectDetailPage() {
@@ -214,6 +215,8 @@ export function ProjectDetailPage() {
       <ExpensesSection projectId={id} canWrite={canWrite} />
 
       <PaymentsSection projectId={id} canWrite={canWrite} />
+
+      <VisitsSection projectId={id} systems={data.systems} canWrite={canWrite} />
 
       {editingProject && (
         <EditProjectDialog
